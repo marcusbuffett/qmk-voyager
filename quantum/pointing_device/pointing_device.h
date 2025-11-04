@@ -74,6 +74,14 @@ typedef struct {
 #    include "spi_master.h"
 #    include "drivers/sensors/pmw33xx_common.h"
 #    define POINTING_DEVICE_MOTION_PIN_ACTIVE_LOW
+#elif defined(POINTING_DEVICE_DRIVER_navigator_trackball)
+#    include "i2c_master.h"
+#    include "drivers/sensors/navigator_trackball.h"
+#    include "drivers/sensors/navigator.h"
+#elif defined(POINTING_DEVICE_DRIVER_navigator_trackpad)
+#    include "i2c_master.h"
+#    include "drivers/sensors/navigator_trackpad.h"
+#    include "drivers/sensors/navigator.h"
 #else
 void           pointing_device_driver_init(void);
 report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report);
@@ -136,6 +144,7 @@ uint16_t pointing_device_get_shared_cpi(void);
 #    if defined(POINTING_DEVICE_COMBINED)
 void           pointing_device_set_cpi_on_side(bool left, uint16_t cpi);
 report_mouse_t pointing_device_combine_reports(report_mouse_t left_report, report_mouse_t right_report);
+report_mouse_t pointing_device_task_combined(report_mouse_t left_report, report_mouse_t right_report);
 report_mouse_t pointing_device_task_combined_kb(report_mouse_t left_report, report_mouse_t right_report);
 report_mouse_t pointing_device_task_combined_user(report_mouse_t left_report, report_mouse_t right_report);
 report_mouse_t pointing_device_adjust_by_defines_right(report_mouse_t mouse_report);

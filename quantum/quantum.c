@@ -430,6 +430,7 @@ bool process_record_quantum(keyrecord_t *record) {
 #ifdef TRI_LAYER_ENABLE
             process_tri_layer(keycode, record) &&
 #endif
+
 #if !defined(NO_ACTION_LAYER)
             process_default_layer(keycode, record) &&
 #endif

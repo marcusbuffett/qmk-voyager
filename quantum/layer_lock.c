@@ -50,6 +50,7 @@ void layer_lock_invert(uint8_t layer) {
         }
 #    endif // NO_ACTION_ONESHOT
         layer_on(layer);
+
         layer_lock_activity_trigger();
     } else { // Layer is being unlocked.
         layer_off(layer);
@@ -73,6 +74,7 @@ void layer_lock_off(uint8_t layer) {
 void layer_lock_all_off(void) {
     layer_and(~locked_layers);
     locked_layers = 0;
+
     layer_lock_set_kb(locked_layers);
 }
 

@@ -15,10 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "planck_ez.h"
+#include QMK_KEYBOARD_H
 #include <ch.h>
 #include <hal.h>
 #include "keycodes.h"
+
+#ifdef COMMUNITY_MODULE_ORYX_ENABLE
+#    include "oryx.h"
+#endif // COMMUNITY_MODULE_ORYX_ENABLE
+#ifdef COMMUNITY_MODULE_DEFAULTS_ENABLE
+#    include "defaults.h"
+#endif
 
 keyboard_config_t keyboard_config;
 
@@ -119,7 +126,7 @@ void keyboard_pre_init_kb(void) {
     }
     // read kb settings from eeprom
     keyboard_config.raw = eeconfig_read_kb();
-#if defined(RGB_MATRIX_ENABLE) && defined(ORYX_CONFIGURATOR)
+#if defined(RGB_MATRIX_ENABLE)
     if (keyboard_config.rgb_matrix_enable) {
         rgb_matrix_set_flags(LED_FLAG_ALL);
     } else {
@@ -130,7 +137,7 @@ void keyboard_pre_init_kb(void) {
     keyboard_pre_init_user();
 }
 
-#if defined(RGB_MATRIX_ENABLE) && defined(ORYX_CONFIGURATOR)
+#if defined(RGB_MATRIX_ENABLE)
 void keyboard_post_init_kb(void) {
     rgb_matrix_enable_noeeprom();
     keyboard_post_init_user();
@@ -146,7 +153,6 @@ void eeconfig_init_kb(void) {  // EEPROM is getting reset!
 }
 
 
-#ifdef ORYX_CONFIGURATOR
 
 #ifndef PLANCK_EZ_USER_LEDS
 
@@ -206,6 +212,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 eeconfig_update_kb(keyboard_config.raw);
             }
             break;
+        case RGB_TOG:
         case QK_RGB_MATRIX_TOGGLE:
             if (record->event.pressed) {
               switch (rgb_matrix_get_flags()) {
@@ -228,7 +235,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
     return process_record_user(keycode, record);
 }
-#endif
 
 #ifdef AUDIO_ENABLE
 bool music_mask_kb(uint16_t keycode) {

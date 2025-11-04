@@ -14,9 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-
+ */
 
 #pragma once
 
@@ -26,18 +24,13 @@ extern bool mcp23018_leds[];
 
 #define MCP23018_DEFAULT_ADDRESS 0b0100000
 
-#define ML_LED_1(status) gpio_write_pin(B5, (bool)status)
-#define ML_LED_2(status) gpio_write_pin(B4, (bool)status)
-#define ML_LED_3(status) gpio_write_pin(B3, (bool)status)
+#define STATUS_LED_1(status) gpio_write_pin(B5, (bool)status)
+#define STATUS_LED_2(status) gpio_write_pin(B4, (bool)status)
+#define STATUS_LED_3(status) gpio_write_pin(B3, (bool)status)
 
-#define ML_LED_4(status) mcp23018_leds[0] = (bool)status
-#define ML_LED_5(status) mcp23018_leds[1] = (bool)status
-#define ML_LED_6(status) mcp23018_leds[2] = (bool)status
-
-enum planck_ez_keycodes {
-    TOGGLE_LAYER_COLOR = QK_KB_0,
-    LED_LEVEL,
-};
+#define STATUS_LED_4(status) mcp23018_leds[0] = (bool)status
+#define STATUS_LED_5(status) mcp23018_leds[1] = (bool)status
+#define STATUS_LED_6(status) mcp23018_leds[2] = (bool)status
 
 #ifndef WEBUSB_ENABLE
 #    define WEBUSB_PAIR KC_NO
