@@ -1,4 +1,5 @@
 #define FLOW_TAP_TERM 150
+#define TAPPING_TERM 150
 #define CHORDAL_HOLD
 #define USB_SUSPEND_WAKEUP_DELAY 0
 #define SERIAL_NUMBER "YlovZ/DzADzb"

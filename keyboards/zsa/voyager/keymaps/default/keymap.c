@@ -9,31 +9,26 @@ enum custom_keycodes {
   RGB_SLD = ZSA_SAFE_RANGE,
 };
 
-
-
-#define DUAL_FUNC_0 LT(7, KC_8)
-#define DUAL_FUNC_1 LT(8, KC_8)
-
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_voyager(
     KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,
     KC_TAB,         KC_B,           KC_G,           KC_D,           KC_L,           KC_K,                                           KC_Z,           KC_Q,           KC_U,           KC_J,           KC_BSPC,        KC_TRANSPARENT,
     KC_ESCAPE,      KC_C,           KC_S,           KC_T,           KC_N,           KC_R,                                           KC_A,           KC_O,           KC_E,           KC_I,           KC_F,           KC_ENTER,
-    OSL(3),         OSL(4),         KC_P,           KC_V,           KC_H,           KC_M,                                           KC_X,           QK_LEAD,        LGUI(KC_SPC),   KC_Y,           KC_W,           LSFT(KC_ENTER),
+    OSL(3),         OSL(4),         KC_P,           KC_V,           KC_H,           KC_M,                                           KC_X,           QK_LEAD,        OSM(MOD_HYPR),  KC_Y,           KC_W,           LSFT(KC_ENTER),
                                                     KC_SPACE,       OSL(2),                                         OSM(MOD_LSFT),  OSL(1)
   ),
   [1] = LAYOUT_voyager(
     KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,
-    KC_TRANSPARENT, DUAL_FUNC_0,    KC_MINUS,       KC_LBRC,        KC_RBRC,        KC_DLR,                                         KC_TILD,        KC_LABK,        KC_RABK,        KC_SLASH,       KC_ASTR,        KC_TRANSPARENT,
+    KC_HASH, KC_AT,          KC_MINUS,       KC_LBRC,        KC_RBRC,        KC_DLR,                                         KC_TILD,        KC_LABK,        KC_RABK,        KC_SLASH,       KC_ASTR,        KC_TRANSPARENT,
     KC_TRANSPARENT, KC_DQUO,        KC_SCLN,        KC_LPRN,        KC_RPRN,        KC_AMPR,                                        KC_GRAVE,       KC_DOT,         KC_QUOTE,       KC_COMMA,       KC_COLN,        KC_TRANSPARENT,
-    KC_TRANSPARENT, DUAL_FUNC_1,        KC_EQUAL,       KC_LCBR,        KC_RCBR,        KC_PIPE,                                        KC_PLUS,        KC_QUES,        KC_EXLM,        KC_BSLS,        KC_CIRC,        KC_TRANSPARENT,
+    KC_PERCENT, KC_UNDERSCORE,        KC_EQUAL,       KC_LCBR,        KC_RCBR,        KC_PIPE,                                        KC_PLUS,        KC_QUES,        KC_EXLM,        KC_BSLS,        KC_CIRC,        KC_TRANSPARENT,
                                                     KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT
   ),
   [2] = LAYOUT_voyager(
     KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,
     KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_SPC, KC_Q,           KC_TRANSPARENT, KC_TRANSPARENT,
     KC_TRANSPARENT, KC_LEFT,        KC_DOWN,        KC_UP,          KC_RIGHT,       KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_LEFT_GUI,    KC_LEFT_ALT,    KC_LEFT_CTRL,   KC_LEFT_SHIFT,  KC_TRANSPARENT,
-    KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,
+    KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_SPACE,       KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,
                                                     KC_TRANSPARENT, KC_TRANSPARENT,                                                 KC_TRANSPARENT, KC_TRANSPARENT
   ),
   [3] = LAYOUT_voyager(
@@ -67,12 +62,8 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT(
   '*', '*', '*', '*'
 );
 
-const uint16_t PROGMEM cmd_combo[] = {KC_C, KC_S, COMBO_END};
-const uint16_t PROGMEM ctrl_combo[] = {KC_S, KC_T, COMBO_END};
 const uint16_t PROGMEM mouse_combo[] = {KC_T, KC_N, COMBO_END};
 combo_t key_combos[] = {
-    COMBO(ctrl_combo, KC_LEFT_CTRL),
-    COMBO(cmd_combo,  KC_LEFT_GUI),
     COMBO(mouse_combo, TG(5)),
 };
 
@@ -81,37 +72,6 @@ combo_t key_combos[] = {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
-
-    case DUAL_FUNC_0:
-      if (record->tap.count > 0) {
-        if (record->event.pressed) {
-          register_code16(KC_AT);
-        } else {
-          unregister_code16(KC_AT);
-        }
-      } else {
-        if (record->event.pressed) {
-          register_code16(KC_HASH);
-        } else {
-          unregister_code16(KC_HASH);
-        }
-      }
-      return false;
-    case DUAL_FUNC_1:
-      if (record->tap.count > 0) {
-        if (record->event.pressed) {
-          register_code16(KC_UNDERSCORE);
-        } else {
-          unregister_code16(KC_UNDERSCORE);
-        }
-      } else {
-        if (record->event.pressed) {
-          register_code16(KC_PERC);
-        } else {
-          unregister_code16(KC_PERC);
-        }
-      }
-      return false;
     case RGB_SLD:
       if (record->event.pressed) {
         rgblight_mode(1);
@@ -119,6 +79,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       return false;
   }
   return true;
+}
+
+void leader_start_user(void) {
+    clear_keyboard();  // Clear all modifiers and keys
+    layer_clear();     // Return to base layer
 }
 
 void leader_end_user(void) {
@@ -141,10 +106,20 @@ void leader_end_user(void) {
         tap_code(KC_MNXT);
     } else if (leader_sequence_two_keys(KC_I, KC_B)) { // mnemonic: Interface Back/previous track
         tap_code(KC_MPRV);
-    } else if (leader_sequence_two_keys(KC_I, KC_S)) { // mnemonic: Intersface speak (Wispr)
+    } else if (leader_sequence_two_keys(KC_I, KC_S)) { // mnemonic: Interface speak (Wispr)
         tap_code16(LSFT(LCTL(KC_SPC)));
+    } else if (leader_sequence_two_keys(KC_I, KC_I)) { // mnemonic: Interface input (off) - Zoom mute
+        tap_code(KC_F13);
 
     // Tools (t prefix)
+    } else if (leader_sequence_two_keys(KC_T, KC_C)) { // mnemonic: Tool Clipboard history
+        tap_code(KC_F14);
+    } else if (leader_sequence_two_keys(KC_T, KC_P)) { // mnemonic: Tool color Picker
+        tap_code16(LGUI(LSFT(KC_M)));
+    } else if (leader_sequence_two_keys(KC_T, KC_J)) { // mnemonic: Tool ocr (J for jump to text)
+        tap_code(KC_F15);
+    } else if (leader_sequence_two_keys(KC_T, KC_M)) { // mnemonic: Tool Measure (PixelSnap 2)
+        tap_code16(LSFT(LALT(LGUI(KC_F))));
     } else if (leader_sequence_two_keys(KC_T, KC_S)) { // mnemonic: Tool Screenshot
         tap_code16(LGUI(LSFT(KC_3)));
     } else if (leader_sequence_two_keys(KC_T, KC_A)) { // mnemonic: Tool Area capture
@@ -154,6 +129,6 @@ void leader_end_user(void) {
     } else if (leader_sequence_two_keys(KC_T, KC_E)) { // mnemonic: Tool Emoji picker
         tap_code16(LCTL(LGUI(KC_SPC)));
     } else if (leader_sequence_two_keys(KC_T, KC_D)) { // mnemonic: Tool Dictation
-        tap_code16(HYPR(KC_W)); // hyper+. for Wispr flow dictation
+        tap_code16(LALT(LCTL(KC_SPC))); // Alt+Ctrl+Space for Flow dictation
     }
 }
