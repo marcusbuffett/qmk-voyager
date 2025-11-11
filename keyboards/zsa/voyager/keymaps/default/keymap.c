@@ -7,6 +7,7 @@
 
 enum custom_keycodes {
   RGB_SLD = ZSA_SAFE_RANGE,
+  RESET_STATE,
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -14,7 +15,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,
     KC_TAB,         KC_B,           KC_G,           KC_D,           KC_L,           KC_K,                                           KC_Z,           KC_Q,           KC_U,           KC_J,           KC_BSPC,        KC_TRANSPARENT,
     KC_ESCAPE,      KC_C,           KC_S,           KC_T,           KC_N,           KC_R,                                           KC_A,           KC_O,           KC_E,           KC_I,           KC_F,           KC_ENTER,
-    OSL(3),         OSL(4),         KC_P,           KC_V,           KC_H,           KC_M,                                           KC_X,           QK_LEAD,        OSM(MOD_HYPR),  KC_Y,           KC_W,           LSFT(KC_ENTER),
+    OSL(3),         OSL(4),         KC_P,           KC_V,           KC_H,           KC_M,                                           KC_X,           QK_LEAD,        RESET_STATE,    KC_Y,           KC_W,           LSFT(KC_ENTER),
                                                     KC_SPACE,       OSL(2),                                         OSM(MOD_LSFT),  OSL(1)
   ),
   [1] = LAYOUT_voyager(
@@ -77,58 +78,88 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         rgblight_mode(1);
       }
       return false;
+    case RESET_STATE:
+      if (record->event.pressed) {
+        clear_keyboard();
+        clear_oneshot_mods();
+        clear_oneshot_locked_mods();
+        layer_clear();
+      }
+      return false;
   }
   return true;
 }
 
 void leader_start_user(void) {
-    clear_keyboard();  // Clear all modifiers and keys
-    layer_clear();     // Return to base layer
 }
 
 void leader_end_user(void) {
+    // Single-key app shortcuts
+    if (leader_sequence_one_key(KC_B)) {
+        tap_code16(HYPR(KC_B));  // Zen Browser
+    } else if (leader_sequence_one_key(KC_C)) {
+        tap_code16(HYPR(KC_T));  // Ghostty Terminal
+
+    // Open apps (o prefix)
+    } else if (leader_sequence_two_keys(KC_O, KC_O)) {
+        tap_code16(HYPR(KC_O));  // Obsidian
+    } else if (leader_sequence_two_keys(KC_O, KC_A)) {
+        tap_code16(HYPR(KC_A));  // TIDAL (Audio)
+    } else if (leader_sequence_two_keys(KC_O, KC_D)) {
+        tap_code16(HYPR(KC_D));  // Discord
+    } else if (leader_sequence_two_keys(KC_O, KC_L)) {
+        tap_code16(HYPR(KC_L));  // Linear
+    } else if (leader_sequence_two_keys(KC_O, KC_S)) {
+        tap_code16(HYPR(KC_S));  // Slack
+    } else if (leader_sequence_two_keys(KC_O, KC_Z)) {
+        tap_code16(HYPR(KC_Z));  // Zoom
+    } else if (leader_sequence_two_keys(KC_O, KC_Y)) {
+        tap_code16(HYPR(KC_Y));  // Spotify
+    } else if (leader_sequence_two_keys(KC_O, KC_C)) {
+        tap_code16(HYPR(KC_C));  // Cursor
+
     // Window Management (w prefix)
-    if (leader_sequence_two_keys(KC_W, KC_M)) { // mnemonic: Window Maximize
-        tap_code16(HYPR(KC_M));
-    } else if (leader_sequence_two_keys(KC_W, KC_P)) { // mnemonic: Window dev layout (Position)
-        tap_code16(HYPR(KC_P));
+    } else if (leader_sequence_two_keys(KC_W, KC_M)) {
+        tap_code16(HYPR(KC_M));  // Window Maximize
+    } else if (leader_sequence_two_keys(KC_W, KC_P)) {
+        tap_code16(HYPR(KC_P));  // Window dev layout (Position)
 
     // Media Controls (i prefix) - Interface/Media
-    } else if (leader_sequence_two_keys(KC_I, KC_U)) { // mnemonic: Interface volume Up
-        tap_code(KC_VOLU);
-    } else if (leader_sequence_two_keys(KC_I, KC_D)) { // mnemonic: Interface volume Down
-        tap_code(KC_VOLD);
-    } else if (leader_sequence_two_keys(KC_I, KC_M)) { // mnemonic: Interface Mute
-        tap_code(KC_MUTE);
-    } else if (leader_sequence_two_keys(KC_I, KC_P)) { // mnemonic: Interface Play/pause
-        tap_code(KC_MPLY);
-    } else if (leader_sequence_two_keys(KC_I, KC_N)) { // mnemonic: Interface Next track
-        tap_code(KC_MNXT);
-    } else if (leader_sequence_two_keys(KC_I, KC_B)) { // mnemonic: Interface Back/previous track
-        tap_code(KC_MPRV);
-    } else if (leader_sequence_two_keys(KC_I, KC_S)) { // mnemonic: Interface speak (Wispr)
-        tap_code16(LSFT(LCTL(KC_SPC)));
-    } else if (leader_sequence_two_keys(KC_I, KC_I)) { // mnemonic: Interface input (off) - Zoom mute
-        tap_code(KC_F13);
+    } else if (leader_sequence_two_keys(KC_I, KC_U)) {
+        tap_code(KC_VOLU);  // Interface volume Up
+    } else if (leader_sequence_two_keys(KC_I, KC_D)) {
+        tap_code(KC_VOLD);  // Interface volume Down
+    } else if (leader_sequence_two_keys(KC_I, KC_M)) {
+        tap_code(KC_MUTE);  // Interface Mute
+    } else if (leader_sequence_two_keys(KC_I, KC_P)) {
+        tap_code(KC_MPLY);  // Interface Play/pause
+    } else if (leader_sequence_two_keys(KC_I, KC_N)) {
+        tap_code(KC_MNXT);  // Interface Next track
+    } else if (leader_sequence_two_keys(KC_I, KC_B)) {
+        tap_code(KC_MPRV);  // Interface Back/previous track
+    } else if (leader_sequence_two_keys(KC_I, KC_S)) {
+        tap_code16(LSFT(LCTL(KC_SPC)));  // Interface speak (Wispr)
+    } else if (leader_sequence_two_keys(KC_I, KC_I)) {
+        tap_code(KC_F13);  // Interface input (off) - Zoom mute
 
     // Tools (t prefix)
-    } else if (leader_sequence_two_keys(KC_T, KC_C)) { // mnemonic: Tool Clipboard history
-        tap_code(KC_F14);
-    } else if (leader_sequence_two_keys(KC_T, KC_P)) { // mnemonic: Tool color Picker
-        tap_code16(LGUI(LSFT(KC_M)));
-    } else if (leader_sequence_two_keys(KC_T, KC_J)) { // mnemonic: Tool ocr (J for jump to text)
-        tap_code(KC_F15);
-    } else if (leader_sequence_two_keys(KC_T, KC_M)) { // mnemonic: Tool Measure (PixelSnap 2)
-        tap_code16(LSFT(LALT(LGUI(KC_F))));
-    } else if (leader_sequence_two_keys(KC_T, KC_S)) { // mnemonic: Tool Screenshot
-        tap_code16(LGUI(LSFT(KC_3)));
-    } else if (leader_sequence_two_keys(KC_T, KC_A)) { // mnemonic: Tool Area capture
-        tap_code16(LGUI(LSFT(KC_4)));
-    } else if (leader_sequence_two_keys(KC_T, KC_T)) { // mnemonic: Tool screenshot Tool
-        tap_code16(LGUI(LSFT(KC_5)));
-    } else if (leader_sequence_two_keys(KC_T, KC_E)) { // mnemonic: Tool Emoji picker
-        tap_code16(LCTL(LGUI(KC_SPC)));
-    } else if (leader_sequence_two_keys(KC_T, KC_D)) { // mnemonic: Tool Dictation
-        tap_code16(LALT(LCTL(KC_SPC))); // Alt+Ctrl+Space for Flow dictation
+    } else if (leader_sequence_two_keys(KC_T, KC_C)) {
+        tap_code(KC_F14);  // Tool Clipboard history
+    } else if (leader_sequence_two_keys(KC_T, KC_P)) {
+        tap_code16(LGUI(LSFT(KC_M)));  // Tool color Picker
+    } else if (leader_sequence_two_keys(KC_T, KC_J)) {
+        tap_code(KC_F15);  // Tool ocr (J for jump to text)
+    } else if (leader_sequence_two_keys(KC_T, KC_M)) {
+        tap_code16(LSFT(LALT(LGUI(KC_F))));  // Tool Measure (PixelSnap 2)
+    } else if (leader_sequence_two_keys(KC_T, KC_S)) {
+        tap_code16(LGUI(LSFT(KC_3)));  // Tool Screenshot
+    } else if (leader_sequence_two_keys(KC_T, KC_A)) {
+        tap_code16(LGUI(LSFT(KC_4)));  // Tool Area capture
+    } else if (leader_sequence_two_keys(KC_T, KC_T)) {
+        tap_code16(LGUI(LSFT(KC_5)));  // Tool screenshot Tool
+    } else if (leader_sequence_two_keys(KC_T, KC_E)) {
+        tap_code16(LCTL(LGUI(KC_SPC)));  // Tool Emoji picker
+    } else if (leader_sequence_two_keys(KC_T, KC_D)) {
+        tap_code16(LALT(LCTL(KC_SPC)));  // Tool Dictation (Flow)
     }
 }
