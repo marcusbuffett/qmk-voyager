@@ -7,8 +7,7 @@
 
 // #define RGB_MATRIX_STARTUP_SPD 60
 
-#define LEADER_PER_KEY_TIMING
-#define LEADER_TIMEOUT 200
+#define CUSTOM_LEADER_TIMEOUT 1000
 
 // Mouse key speed and acceleration.
 #undef MOUSEKEY_DELAY

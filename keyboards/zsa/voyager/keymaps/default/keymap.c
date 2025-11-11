@@ -1,5 +1,6 @@
 #include QMK_KEYBOARD_H
 #include "version.h"
+#include "timer.h"
 #define MOON_LED_LEVEL LED_LEVEL
 #ifndef ZSA_SAFE_RANGE
 #define ZSA_SAFE_RANGE SAFE_RANGE
@@ -9,6 +10,17 @@ enum custom_keycodes {
   RGB_SLD = ZSA_SAFE_RANGE,
   RESET_STATE,
 };
+
+// ────── custom leader state ──────
+static bool     custom_leader_active = false;
+static uint16_t custom_leader_timer  = 0;
+static uint16_t custom_leader_seq[3] = {0};   // 0…2 → max 2-key seq + safety
+static uint8_t  custom_leader_len    = 0;
+
+// ────── helper: reset timer on every new key ──────
+static inline void reset_leader_timer(void) {
+    custom_leader_timer = timer_read();
+}
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_voyager(
@@ -72,94 +84,141 @@ combo_t key_combos[] = {
 
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
-    case RGB_SLD:
-      if (record->event.pressed) {
-        rgblight_mode(1);
-      }
-      return false;
-    case RESET_STATE:
-      if (record->event.pressed) {
+    // ── non-leader custom keys ──
+    if (record->event.pressed) {
+        switch (keycode) {
+            case RGB_SLD:
+                rgblight_mode(1);
+                return false;
+            case RESET_STATE:
+                clear_keyboard();
+                clear_oneshot_mods();
+                clear_oneshot_locked_mods();
+                layer_clear();
+                return false;
+        }
+    }
+
+    // ── leader handling (only on press) ──
+    if (!record->event.pressed) return true;
+
+    if (custom_leader_active) {
+        // ----- timeout check (safety) -----
+        if (custom_leader_timer && timer_elapsed(custom_leader_timer) > CUSTOM_LEADER_TIMEOUT) {
+            custom_leader_active = false;
+            custom_leader_len    = 0;
+            custom_leader_timer  = 0;
+            return true;               // let the late key act normally
+        }
+
+        // ----- add the pressed key to the buffer -----
+        if (custom_leader_len < 2) {
+            custom_leader_seq[custom_leader_len++] = keycode;
+        }
+
+        // ----- **reset timer on every key** (per-key timing) -----
+        reset_leader_timer();
+
+        // ----- immediate match evaluation -----
+        bool matched = false;
+
+        // ---- single-key shortcuts (no longer prefixes) ----
+        if (custom_leader_len == 1) {
+            switch (custom_leader_seq[0]) {
+                case KC_B: tap_code16(HYPR(KC_B)); matched = true; break; // Zen Browser
+                case KC_C: tap_code16(HYPR(KC_T)); matched = true; break; // Ghostty
+            }
+        }
+
+        // ---- two-key shortcuts ----
+        if (custom_leader_len == 2) {
+            // Open apps (N prefix)
+            if (custom_leader_seq[0] == KC_N) {
+                switch (custom_leader_seq[1]) {
+                    case KC_O: tap_code16(HYPR(KC_O)); matched = true; break; // Obsidian
+                    case KC_A: tap_code16(HYPR(KC_A)); matched = true; break; // TIDAL
+                    case KC_D: tap_code16(HYPR(KC_D)); matched = true; break; // Discord
+                    case KC_L: tap_code16(HYPR(KC_L)); matched = true; break; // Linear
+                    case KC_S: tap_code16(HYPR(KC_S)); matched = true; break; // Slack
+                    case KC_Z: tap_code16(HYPR(KC_Z)); matched = true; break; // Zoom
+                    case KC_Y: tap_code16(HYPR(KC_Y)); matched = true; break; // Spotify
+                    case KC_C: tap_code16(HYPR(KC_C)); matched = true; break; // Cursor
+                }
+            }
+            // Window Management (W prefix)
+            else if (custom_leader_seq[0] == KC_W) {
+                switch (custom_leader_seq[1]) {
+                    case KC_M: tap_code16(HYPR(KC_M)); matched = true; break; // Maximize
+                    case KC_P: tap_code16(HYPR(KC_P)); matched = true; break; // Position
+                }
+            }
+            // Media Controls (I prefix)
+            else if (custom_leader_seq[0] == KC_I) {
+                switch (custom_leader_seq[1]) {
+                    case KC_U: tap_code(KC_VOLU); matched = true; break;
+                    case KC_D: tap_code(KC_VOLD); matched = true; break;
+                    case KC_M: tap_code(KC_MUTE); matched = true; break;
+                    case KC_P: tap_code(KC_MPLY); matched = true; break;
+                    case KC_N: tap_code(KC_MNXT); matched = true; break;
+                    case KC_B: tap_code(KC_MPRV); matched = true; break;
+                    case KC_S: tap_code16(LSFT(LCTL(KC_SPC))); matched = true; break;
+                    case KC_I: tap_code(KC_F13); matched = true; break;
+                }
+            }
+            // Tools (T prefix)
+            else if (custom_leader_seq[0] == KC_T) {
+                switch (custom_leader_seq[1]) {
+                    case KC_C: tap_code(KC_F16); matched = true; break;
+                    case KC_P: tap_code16(LGUI(LSFT(KC_M))); matched = true; break;
+                    case KC_J: tap_code(KC_F17); matched = true; break;
+                    case KC_M: tap_code16(LSFT(LALT(LGUI(KC_F)))); matched = true; break;
+                    case KC_S: tap_code16(LGUI(LSFT(KC_3))); matched = true; break;
+                    case KC_A: tap_code16(LGUI(LSFT(KC_4))); matched = true; break;
+                    case KC_T: tap_code16(LGUI(LSFT(KC_5))); matched = true; break;
+                    case KC_E: tap_code16(LCTL(LGUI(KC_SPC))); matched = true; break;
+                    case KC_D: tap_code16(LALT(LCTL(KC_SPC))); matched = true; break;
+                }
+            }
+        }
+
+        // ----- if we found a match → execute and exit leader mode -----
+        if (matched) {
+            custom_leader_active = false;
+            custom_leader_len    = 0;
+            custom_leader_timer  = 0;
+            return false;   // swallow the key that triggered the action
+        }
+
+        // ----- buffer overflow (should never happen with max 2) -----
+        if (custom_leader_len >= 2 && !matched) {
+            custom_leader_active = false;
+            custom_leader_len    = 0;
+            custom_leader_timer  = 0;
+        }
+
+        return false;   // swallow keys during leader sequence
+    }
+
+    // ── start leader mode when QK_LEAD is pressed ──
+    if (keycode == QK_LEAD) {
         clear_keyboard();
-        clear_oneshot_mods();
-        clear_oneshot_locked_mods();
         layer_clear();
-      }
-      return false;
-  }
-  return true;
+        custom_leader_active = true;
+        custom_leader_len    = 0;
+        reset_leader_timer();
+        return false;                 // swallow the leader key itself
+    }
+
+    return true;
 }
 
-void leader_start_user(void) {
-}
-
-void leader_end_user(void) {
-    // Single-key app shortcuts
-    if (leader_sequence_one_key(KC_B)) {
-        tap_code16(HYPR(KC_B));  // Zen Browser
-    } else if (leader_sequence_one_key(KC_C)) {
-        tap_code16(HYPR(KC_T));  // Ghostty Terminal
-
-    // Open apps (o prefix)
-    } else if (leader_sequence_two_keys(KC_O, KC_O)) {
-        tap_code16(HYPR(KC_O));  // Obsidian
-    } else if (leader_sequence_two_keys(KC_O, KC_A)) {
-        tap_code16(HYPR(KC_A));  // TIDAL (Audio)
-    } else if (leader_sequence_two_keys(KC_O, KC_D)) {
-        tap_code16(HYPR(KC_D));  // Discord
-    } else if (leader_sequence_two_keys(KC_O, KC_L)) {
-        tap_code16(HYPR(KC_L));  // Linear
-    } else if (leader_sequence_two_keys(KC_O, KC_S)) {
-        tap_code16(HYPR(KC_S));  // Slack
-    } else if (leader_sequence_two_keys(KC_O, KC_Z)) {
-        tap_code16(HYPR(KC_Z));  // Zoom
-    } else if (leader_sequence_two_keys(KC_O, KC_Y)) {
-        tap_code16(HYPR(KC_Y));  // Spotify
-    } else if (leader_sequence_two_keys(KC_O, KC_C)) {
-        tap_code16(HYPR(KC_C));  // Cursor
-
-    // Window Management (w prefix)
-    } else if (leader_sequence_two_keys(KC_W, KC_M)) {
-        tap_code16(HYPR(KC_M));  // Window Maximize
-    } else if (leader_sequence_two_keys(KC_W, KC_P)) {
-        tap_code16(HYPR(KC_P));  // Window dev layout (Position)
-
-    // Media Controls (i prefix) - Interface/Media
-    } else if (leader_sequence_two_keys(KC_I, KC_U)) {
-        tap_code(KC_VOLU);  // Interface volume Up
-    } else if (leader_sequence_two_keys(KC_I, KC_D)) {
-        tap_code(KC_VOLD);  // Interface volume Down
-    } else if (leader_sequence_two_keys(KC_I, KC_M)) {
-        tap_code(KC_MUTE);  // Interface Mute
-    } else if (leader_sequence_two_keys(KC_I, KC_P)) {
-        tap_code(KC_MPLY);  // Interface Play/pause
-    } else if (leader_sequence_two_keys(KC_I, KC_N)) {
-        tap_code(KC_MNXT);  // Interface Next track
-    } else if (leader_sequence_two_keys(KC_I, KC_B)) {
-        tap_code(KC_MPRV);  // Interface Back/previous track
-    } else if (leader_sequence_two_keys(KC_I, KC_S)) {
-        tap_code16(LSFT(LCTL(KC_SPC)));  // Interface speak (Wispr)
-    } else if (leader_sequence_two_keys(KC_I, KC_I)) {
-        tap_code(KC_F13);  // Interface input (off) - Zoom mute
-
-    // Tools (t prefix)
-    } else if (leader_sequence_two_keys(KC_T, KC_C)) {
-        tap_code(KC_F14);  // Tool Clipboard history
-    } else if (leader_sequence_two_keys(KC_T, KC_P)) {
-        tap_code16(LGUI(LSFT(KC_M)));  // Tool color Picker
-    } else if (leader_sequence_two_keys(KC_T, KC_J)) {
-        tap_code(KC_F15);  // Tool ocr (J for jump to text)
-    } else if (leader_sequence_two_keys(KC_T, KC_M)) {
-        tap_code16(LSFT(LALT(LGUI(KC_F))));  // Tool Measure (PixelSnap 2)
-    } else if (leader_sequence_two_keys(KC_T, KC_S)) {
-        tap_code16(LGUI(LSFT(KC_3)));  // Tool Screenshot
-    } else if (leader_sequence_two_keys(KC_T, KC_A)) {
-        tap_code16(LGUI(LSFT(KC_4)));  // Tool Area capture
-    } else if (leader_sequence_two_keys(KC_T, KC_T)) {
-        tap_code16(LGUI(LSFT(KC_5)));  // Tool screenshot Tool
-    } else if (leader_sequence_two_keys(KC_T, KC_E)) {
-        tap_code16(LCTL(LGUI(KC_SPC)));  // Tool Emoji picker
-    } else if (leader_sequence_two_keys(KC_T, KC_D)) {
-        tap_code16(LALT(LCTL(KC_SPC)));  // Tool Dictation (Flow)
+// ────── matrix_scan_user – precise timeout handling ──────
+void matrix_scan_user(void) {
+    if (custom_leader_active && custom_leader_timer &&
+        timer_elapsed(custom_leader_timer) > CUSTOM_LEADER_TIMEOUT) {
+        // timed out without a complete match → just cancel
+        custom_leader_active = false;
+        custom_leader_len    = 0;
+        custom_leader_timer  = 0;
     }
 }
