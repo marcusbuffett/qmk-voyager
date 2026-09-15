@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+# QMK's Python dependencies still use ast.Num, removed in Python 3.14.
+exec uv run --no-project --python 3.12 --with qmk==1.2.0 --with-requirements requirements.txt make zsa/voyager:default "$@"
