@@ -12,7 +12,7 @@ enum custom_keycodes {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_voyager(
     KC_BRID, KC_BRIU, KC_VOLD, KC_VOLU, KC_MUTE, KC_MPLY, KC_MPRV, KC_MNXT, KC_PSCR, KC_INS, KC_DEL, KC_PAUS,
-    KC_TAB,         LCTL_T(KC_CAPS),KC_G,           KC_D,           KC_L,           KC_W,                                           KC_Z,           KC_Q,           KC_U,           KC_B,           KC_BSPC,        KC_TRANSPARENT,
+    KC_TAB,         KC_CAPS,        KC_G,           KC_D,           KC_L,           KC_W,                                           KC_Z,           KC_Q,           KC_U,           KC_B,           KC_BSPC,        KC_TRANSPARENT,
     KC_ESCAPE,      KC_N,           KC_S,           KC_T,           KC_R,           KC_C,                                           KC_A,           KC_O,           KC_E,           KC_I,           KC_H,           KC_ENTER,
     OSL(3),         OSL(4),         KC_P,           KC_V,           KC_F,           KC_M,                                           KC_X,           KC_K,           KC_J,           KC_Y,           KC_NO,          LSFT(KC_ENTER),
                                                     KC_SPACE,       OSL(2),                                         OSM(MOD_LSFT),  OSL(1)
