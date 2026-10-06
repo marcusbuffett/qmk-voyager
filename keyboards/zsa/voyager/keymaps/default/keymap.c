@@ -62,8 +62,11 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT(
   '*', '*', '*', '*'
 );
 
-// Keep the mouse toggle on the same adjacent left home-row keys.
-const uint16_t PROGMEM mouse_combo[] = {KC_T, KC_R, COMBO_END};
+// The mouse toggle is on the right hand: the left drives the Compose command
+// map one-handed while the right holds a mouse, and Compose R T / T R rolls
+// across the old left-hand T+R pair within the combo term. K and J are the
+// right bottom-row index and middle keys; "jk" and "kj" almost never occur.
+const uint16_t PROGMEM mouse_combo[] = {KC_K, KC_J, COMBO_END};
 combo_t key_combos[] = {
     COMBO(mouse_combo, TG(5)),
 };
